@@ -11,6 +11,8 @@
     "example": "tsx src/example.ts",
     "sentinel": "tsx src/sentinel-cli.ts",
     "test:planning": "tsx src/planning/test-planning.ts",
+    "test:execution": "tsx src/execution/test-execution.ts",
+    "test:mcp": "tsx src/test-mcp-connection.ts",
     "mcp:server": "tsx src/echo-server.ts",
     "mcp:tunnel": "npx ngrok http 3000",
     "payment:server": "tsx src/payment-server.ts",

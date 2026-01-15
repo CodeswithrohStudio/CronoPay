@@ -1,5 +1,5 @@
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
-import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
+import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
 import { z } from 'zod';
 
 // Define the response schema for browser operations
@@ -24,10 +24,12 @@ export interface MCPResource {
 
 export class MCPClient {
   private client: Client;
-  private transport!: StdioClientTransport;
+  private transport!: StreamableHTTPClientTransport;
   private connected: boolean = false;
+  private serverUrl: string;
 
-  constructor() {
+  constructor(serverUrl?: string) {
+    this.serverUrl = serverUrl || process.env.MCP_SERVER_URL || 'http://localhost:3000/mcp';
     this.client = new Client({
       name: 'openai-mcp-agent',
       version: '1.0.0',
@@ -46,11 +48,10 @@ export class MCPClient {
     }
 
     try {
-      // Create transport for local Finance MCP server
-      this.transport = new StdioClientTransport({
-        command: 'npx',
-        args: ['tsx', 'src/finance-mcp-server.ts'],
-      });
+      // Create HTTP transport for Finance MCP server
+      this.transport = new StreamableHTTPClientTransport(
+        new URL(this.serverUrl)
+      );
 
       // Connect the client to the transport
       await this.client.connect(this.transport);
@@ -143,18 +144,29 @@ export class MCPClient {
           try {
             // Try to parse as JSON
             return JSON.parse(content.text);
-          } catch {
-            // Return as plain text if not JSON
+          } catch (parseError) {
+            // If parsing fails, check if it's an error message
+            if (content.text.includes('Error') || content.text.includes('Cannot')) {
+              throw new Error(content.text);
+            }
+            // Return as plain text if not JSON and not an error
             return content.text;
           }
         }
         return content;
       }
 
+      // Check if response has structuredContent
+      if (response.structuredContent) {
+        return response.structuredContent;
+      }
+
       return response;
-    } catch (error) {
-      console.error(`Error calling tool ${toolName}:`, error);
-      throw error;
+    } catch (error: any) {
+      // Provide more detailed error message
+      const errorMsg = error?.message || String(error);
+      console.error(`Error calling tool ${toolName}:`, errorMsg);
+      throw new Error(`Tool execution failed: ${errorMsg}`);
     }
   }
 

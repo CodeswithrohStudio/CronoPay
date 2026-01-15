@@ -95,10 +95,54 @@ OUTPUT FORMAT (JSON only):
 }
 
 IMPORTANT:
-- If user says "send 1 USDC to 0x123...", create a plan with balance check + transfer
+- If user says "send 1 USDC to 0x123...", create a plan with:
+  1. Step 1: getBalance tool to check current balance (risk: low)
+  2. Step 2: transferToken with balance_check condition (risk: medium/high based on amount)
 - Token address for USDC on Cronos Testnet: ${process.env.CRONOS_USDC_TOKEN_ADDRESS || '0xc01efAaF7C5C61bEbFAeb358E1161b537b8bC0e0'}
-- Always include conditions for financial operations
-- Be conservative with risk assessment`;
+- Always include balance_check conditions on transfer steps
+- Use getBalance tool for explicit balance verification steps
+- Be conservative with risk assessment
+
+EXAMPLE for "Send 5 USDC to 0x123...":
+{
+  "normalizedIntent": "Check wallet balance and transfer 5 USDC to 0x123... on Cronos Testnet",
+  "steps": [
+    {
+      "action": "Check current USDC balance",
+      "toolName": "getBalance",
+      "parameters": {
+        "tokenAddress": "${process.env.CRONOS_USDC_TOKEN_ADDRESS || '0xc01efAaF7C5C61bEbFAeb358E1161b537b8bC0e0'}"
+      },
+      "conditions": [],
+      "riskLevel": "low",
+      "description": "Verify current USDC balance before proceeding with transfer",
+      "estimatedGas": "0"
+    },
+    {
+      "action": "Transfer 5 USDC to recipient",
+      "toolName": "transferToken",
+      "parameters": {
+        "to": "0x123...",
+        "amount": "5"
+      },
+      "conditions": [
+        {
+          "type": "balance_check",
+          "field": "balance",
+          "operator": "gte",
+          "value": "5",
+          "description": "Ensure balance >= 5 USDC before transfer"
+        }
+      ],
+      "riskLevel": "medium",
+      "description": "Execute USDC transfer to recipient address",
+      "estimatedGas": "0.001"
+    }
+  ],
+  "overallRiskLevel": "medium",
+  "requiresApproval": true,
+  "canRollback": false
+}`;
   }
 
   private transformToPlan(userIntent: string, planData: any): ExecutionPlan {

@@ -47,12 +47,14 @@ function displayPlan(plan: any): void {
   console.log('\n' + '='.repeat(60));
 }
 
-function displayExecutionResult(result: any): void {
+function displayExecutionResult(executionResult: any): void {
   console.log('\n' + '='.repeat(60));
   console.log('✅ EXECUTION RESULT');
   console.log('='.repeat(60));
   
-  result.steps.forEach((step: any, index: number) => {
+  const { plan, summary } = executionResult;
+  
+  plan.steps.forEach((step: any, index: number) => {
     const statusIcons: Record<string, string> = {
       completed: '✓',
       failed: '✗',
@@ -74,6 +76,9 @@ function displayExecutionResult(result: any): void {
         console.log(`     Transaction: ${resultData.txHash}`);
         console.log(`     Explorer: https://explorer.cronos.org/testnet/tx/${resultData.txHash}`);
       }
+      if (resultData.balance) {
+        console.log(`     Balance: ${resultData.balance} ${resultData.symbol || ''}`);
+      }
     }
     
     if (step.error) {
@@ -82,6 +87,13 @@ function displayExecutionResult(result: any): void {
   });
   
   console.log('\n' + '='.repeat(60));
+  console.log('📊 Summary:');
+  console.log(`   Total Steps: ${summary.totalSteps}`);
+  console.log(`   Completed: ${summary.completed}`);
+  if (summary.failed > 0) console.log(`   Failed: ${summary.failed}`);
+  if (summary.skipped > 0) console.log(`   Skipped: ${summary.skipped}`);
+  if (summary.aborted) console.log(`   ⚠️  Execution Aborted`);
+  console.log('='.repeat(60));
 }
 
 async function runCLI() {
