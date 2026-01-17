@@ -1,6 +1,7 @@
 import { ExecutionPlan, ExecutionStep, StepStatus, RiskLevel } from '../planning/types.js';
 import { MCPClient } from '../mcp-client.js';
 import { ConditionEvaluator } from './condition-evaluator.js';
+import { MarketConditionEvaluator } from './market-condition-evaluator.js';
 
 export interface ExecutionResult {
   plan: ExecutionPlan;
@@ -22,11 +23,13 @@ export interface ExecutionOptions {
 export class ExecutionEngine {
   private mcpClient: MCPClient;
   private conditionEvaluator: ConditionEvaluator;
+  private marketConditionEvaluator: MarketConditionEvaluator;
   private executionState: Map<string, any>;
 
   constructor(mcpClient: MCPClient) {
     this.mcpClient = mcpClient;
     this.conditionEvaluator = new ConditionEvaluator();
+    this.marketConditionEvaluator = new MarketConditionEvaluator();
     this.executionState = new Map();
   }
 
@@ -150,11 +153,23 @@ export class ExecutionEngine {
     const details: string[] = [];
 
     for (const condition of step.conditions) {
-      const result = await this.conditionEvaluator.evaluate(condition, {
-        mcpClient: this.mcpClient,
-        executionState: this.executionState,
-        stepParameters: step.parameters,
-      });
+      let result;
+
+      if (condition.type === 'price_check' || condition.type === 'volatility_check' || condition.type === 'trend_check') {
+        result = await this.marketConditionEvaluator.evaluate(condition, {
+          executionState: this.executionState,
+        });
+
+        if (result.marketData) {
+          this.executionState.set(`market_${condition.symbol}`, result.marketData);
+        }
+      } else {
+        result = await this.conditionEvaluator.evaluate(condition, {
+          mcpClient: this.mcpClient,
+          executionState: this.executionState,
+          stepParameters: step.parameters,
+        });
+      }
 
       if (!result.met) {
         return {

@@ -112,14 +112,16 @@ export class PlanValidator {
   }
 
   private validateConditions(steps: ExecutionStep[], errors: string[]): void {
+    const validConditionTypes = ['balance_check', 'price_check', 'volatility_check', 'trend_check', 'custom'];
+    
     steps.forEach((step, index) => {
       if (!step.conditions || step.conditions.length === 0) return;
 
       step.conditions.forEach((condition, condIndex) => {
         const prefix = `Step ${index + 1}, Condition ${condIndex + 1}`;
         
-        if (!condition.type || !['balance_check', 'custom'].includes(condition.type)) {
-          errors.push(`${prefix}: Invalid condition type`);
+        if (!condition.type || !validConditionTypes.includes(condition.type)) {
+          errors.push(`${prefix}: Invalid condition type '${condition.type}'`);
         }
         if (!condition.field || typeof condition.field !== 'string') {
           errors.push(`${prefix}: Missing condition field`);
@@ -129,6 +131,12 @@ export class PlanValidator {
         }
         if (condition.value === undefined || condition.value === null) {
           errors.push(`${prefix}: Missing condition value`);
+        }
+        
+        if (['price_check', 'volatility_check', 'trend_check'].includes(condition.type)) {
+          if (!condition.symbol) {
+            errors.push(`${prefix}: Market condition requires 'symbol' field`);
+          }
         }
       });
     });

@@ -1,23 +1,13 @@
 {
-  "name": "openai-mcp-browser-agent",
+  "name": "cronopay",
   "version": "1.0.0",
-  "description": "OpenAI agent that interacts with Browser MCP server",
+  "description": "CronoPay - AI-powered autonomous payment agent for Cronos with conditional execution and market-aware logic",
   "type": "module",
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc",
     "dev": "tsx src/index.ts",
-    "start": "npm run build && node dist/index.js",
-    "example": "tsx src/example.ts",
-    "sentinel": "tsx src/sentinel-cli.ts",
-    "test:planning": "tsx src/planning/test-planning.ts",
-    "test:execution": "tsx src/execution/test-execution.ts",
-    "test:mcp": "tsx src/test-mcp-connection.ts",
-    "mcp:server": "tsx src/echo-server.ts",
-    "mcp:tunnel": "npx ngrok http 3000",
-    "payment:server": "tsx src/payment-server.ts",
-    "evvm:server": "tsx src/evvm-server.ts",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "npm run build && node dist/index.js"
   },
   "author": "",
   "license": "ISC",

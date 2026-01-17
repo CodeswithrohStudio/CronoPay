@@ -60,10 +60,11 @@ RULES:
 1. Normalize the user's intent into a clear, unambiguous statement
 2. Break down the intent into discrete, sequential steps
 3. Each step must map to exactly ONE tool call
-4. Identify conditions that must be checked before execution (e.g., balance checks)
+4. Identify conditions that must be checked before execution (e.g., balance checks, price checks, volatility checks)
 5. Assign risk levels: low (read-only), medium (transfers <10 USDC), high (transfers >=10 USDC), critical (>100 USDC)
 6. No loops, no retries, no autonomous decision-making
 7. Be explicit about what will happen
+8. Support market-aware conditions: price_check, volatility_check, trend_check
 
 OUTPUT FORMAT (JSON only):
 {
@@ -82,6 +83,22 @@ OUTPUT FORMAT (JSON only):
           "operator": "gte",
           "value": "10",
           "description": "Ensure balance >= 10 USDC before transfer"
+        },
+        {
+          "type": "price_check",
+          "field": "price",
+          "operator": "gt",
+          "value": "0.10",
+          "symbol": "CRO",
+          "description": "Execute only if CRO price > $0.10"
+        },
+        {
+          "type": "volatility_check",
+          "field": "volatility",
+          "operator": "lt",
+          "value": "5",
+          "symbol": "BTC",
+          "description": "Execute only if BTC volatility < 5%"
         }
       ],
       "riskLevel": "low|medium|high|critical",
@@ -98,10 +115,14 @@ IMPORTANT:
 - If user says "send 1 USDC to 0x123...", create a plan with:
   1. Step 1: getBalance tool to check current balance (risk: low)
   2. Step 2: transferToken with balance_check condition (risk: medium/high based on amount)
+- If user says "send USDC if CRO is above $0.10", add price_check condition with symbol: "CRO"
+- If user says "pay when BTC volatility is low", add volatility_check condition with symbol: "BTC"
+- If user says "transfer if market is bullish", add trend_check condition with value: "bullish"
 - Token address for USDC on Cronos Testnet: ${process.env.CRONOS_USDC_TOKEN_ADDRESS || '0xc01efAaF7C5C61bEbFAeb358E1161b537b8bC0e0'}
 - Always include balance_check conditions on transfer steps
 - Use getBalance tool for explicit balance verification steps
 - Be conservative with risk assessment
+- Market conditions use Crypto.com real-time data for: BTC, ETH, CRO, USDC, USDT
 
 EXAMPLE for "Send 5 USDC to 0x123...":
 {

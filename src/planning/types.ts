@@ -23,11 +23,12 @@ export enum ConditionOperator {
 }
 
 export interface Condition {
-  type: "balance_check" | "custom";
+  type: "balance_check" | "price_check" | "volatility_check" | "trend_check" | "custom";
   field: string;
   operator: ConditionOperator;
   value: string | number;
   description: string;
+  symbol?: string;
 }
 
 export interface ExecutionStep {
