@@ -19,4 +19,4 @@ CronoPay is an MCP-native payment agent that brings AI intelligence, visual plan
 
 ## Documentation
 
-[View Full Documentation](https://example.com)
+[View Full Documentation](https://cronopay-docs.netlify.app/)
